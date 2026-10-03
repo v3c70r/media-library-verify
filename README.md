@@ -1,5 +1,7 @@
 # media-library-verify
 
+[![CI](https://github.com/v3c70r/media-library-verify/actions/workflows/ci.yml/badge.svg)](https://github.com/v3c70r/media-library-verify/actions/workflows/ci.yml)
+
 A [Pi](https://pi.dev) skill/package that verifies a downloaded video library really is
 the claimed content and is safe to keep — without trusting filenames.
 

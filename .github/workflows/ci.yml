@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Python deps
+        run: pip install --quiet numpy pillow ruff
+
+      - name: Lint (syntax + undefined names)
+        run: ruff check --select E9,F skills/media-library-verify/scripts/verify_media.py
+
+      - name: Validate package + skill metadata
+        run: python .github/scripts/validate_skill.py
+
+      - name: Smoke test on synthetic episodes
+        run: |
+          set -euo pipefail
+          LIB="$(mktemp -d)"
+          for ep in "S01E01 - Pilot" "S01E02 - Bonus"; do
+            ffmpeg -v error \
+              -f lavfi -i "testsrc=size=640x360:rate=25:duration=80" \
+              -f lavfi -i "sine=frequency=440:duration=80" \
+              -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest \
+              "$LIB/Test Show ${ep}.mkv"
+          done
+          echo "Synthetic library:"; ls -la "$LIB"
+          python skills/media-library-verify/scripts/verify_media.py \
+            --root "$LIB" --no-vlm --jobs 2 --out "$LIB/report.json"
+          REPORT="$LIB/report.json" python - <<'PY'
+          import json, os
+          d = json.load(open(os.environ["REPORT"]))
+          assert d["n_files"] == 2, d["n_files"]
+          assert d["metadata_issues"] == [], d["metadata_issues"]
+          print("Smoke test OK:", d["n_files"], "files,", len(d["local_outlier_frames"]), "with outliers")
+          PY
