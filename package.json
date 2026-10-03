@@ -1,0 +1,22 @@
+{
+  "name": "media-library-verify",
+  "version": "0.1.0",
+  "description": "Tiered verifier for downloaded media libraries: metadata checks, keyframe sampling, local outlier detection, and optional VLM title OCR/captions.",
+  "keywords": [
+    "pi-package",
+    "pi-skill",
+    "media",
+    "verification",
+    "ffmpeg",
+    "vlm"
+  ],
+  "license": "MIT",
+  "pi": {
+    "skills": ["./skills"]
+  },
+  "files": [
+    "skills",
+    "README.md",
+    "LICENSE"
+  ]
+}
